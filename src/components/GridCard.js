@@ -2,7 +2,27 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
 
 import Card from 'react-bootstrap/Card'
+const renderButton = (taskId, column, btnText, callbackFn) => {
+    if (btnText && callbackFn) {
+        return (
+            <div>
+                <a href="#"
+                   className="card-link"
+                   onClick={onCardAction(taskId, column, callbackFn)}>
+                    { btnText }
+                </a>
+            </div>
+        );
+    } else {
+        return <span />;
+    }
+}
 
+const onCardAction = (taskId, column, callbackFn) => {
+    return () => {
+        callbackFn(taskId, column);
+    };
+}
 
 
 
@@ -16,15 +36,9 @@ const GridCard = props => {
               <Card.Text>
                   Type: {props.type }
               </Card.Text>
-              <button type="button"
+              { renderButton(props.id, props.column, props.prevTxt, props.onPrevClick) }
+              { renderButton(props.id, props.column, props.nextTxt, props.onNextClick) }
 
-                      className="btn btn-primary" style={{ float: 'left' }}>
-                  next
-              </button>
-              <button type="button"
-                      className="btn btn-primary" style={{ float: 'right' }} >
-                  GoBack
-              </button>
 
           </Card.Body>
       </Card>

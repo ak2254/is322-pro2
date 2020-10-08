@@ -9,7 +9,7 @@ import AddTask from './AddTask';
 import GridView from "./GridView";
 
 class App extends React.Component {
-  state = { view: 'grid',  tasks: [],
+  state = { view: 'grid',  allTasks: [],
     sortedTasks:
         { todo: [], inProgress: [], review: [], done: []},
     errorText: ''
@@ -20,15 +20,15 @@ class App extends React.Component {
   }
 
   getData() {
-    axios.get(`http://my-json-server.typicode.com/bnissen24/project2DB/posts`)
-      .then(response => {
-        this.setState({ tasks: response.data, sortedTasks: App.sortTasks(response.data) });
-      }).catch (error => {
-        this.setState({ errorMessage: error.message });
+      axios.get(`http://my-json-server.typicode.com/bnissen24/project2DB/posts`)
+          .then(response => {
+              this.setState({ allTasks: response.data, sortedTasks: this.sortTasks(response.data) });
+          }).catch (error => {
+          this.setState({ errorMessage: error.message });
       });
   }
 
-  static sortTasks(tasks) {
+ sortTasks(tasks) {
     return {
       todo: tasks.filter(post => post.column === 'todo'),
       inProgress: tasks.filter(post => post.column === 'in-progress'),
@@ -36,54 +36,71 @@ class App extends React.Component {
       done: tasks.filter(post => post.column === 'done'),
     }
   }
-  onAddTask = (taskName) => {
-    let t = this.state.tasks;
-    t.push({
-      title: taskName,
-      id: this.state.tasks.length + 1,
-      type: 'task',
-      column: 'todo'
-    });
 
-    this.setState({ t });
+  onUpdateTask(_task) {
+    let allTasks = this.state.allTasks;
+    const index = allTasks.findIndex(task => task.id === _task.id);
+    allTasks[index] = _task;
+
+    const sortedTasks = this.sortTasks(allTasks);
+    this.setState({ allTasks, sortedTasks })
+
+
+  }
+
+
+  onAddTask = (task) => {
+
+    let { allTasks } = this.state;
+
+    task.column = 'todo';
+    task.id = this.state.allTasks.length + 1;
+
+    allTasks.push(task);
+    let sortedTasks = this.sortTasks(allTasks);
+    this.setState({ allTasks, sortedTasks, view: 'grid' });
+
+
+
   };
-  onUpdateTaskList = (newTaskList) => {
-    this.setState({ tasks: newTaskList });
-  };
+
+
 
 
   onViewChange(view) {
     this.setState({ view });
   }
-  wrapPage(jsx) {
-    const { view } = this.state;
-    return (
-      <div className="container">
-        <PageTabs currentView={view}
-                  onViewChange={this.onViewChange.bind(this)}/>
-        {jsx}
-      </div>
-    );
-  }
+    wrapPage(jsx) {
+        const { view } = this.state;
+        return (
+            <div className="container">
+                <PageTabs currentView={view}
+                          onViewChange={this.onViewChange.bind(this)}/>
+                {jsx}
+            </div>
+        );
+    }
 
-  render() {
+
+    render() {
     const { view } = this.state;
 
     switch (view) {
       case 'grid':
-        return (this.wrapPage(
-            <GridView tasks={this.state.sortedTasks}  />
-        ));
+        case 'grid':
+            return (this.wrapPage(
+                <GridView tasks={this.state.sortedTasks} onUpdateTask={(task)=> this.onUpdateTask(task)} />
+            ));
 
       case 'list':
         return (this.wrapPage(
-          <ListView tasks={this.state.tasks} />
+          <ListView tasks={this.state.allTasks} />
 
 
         ));
       case 'add':
         return (this.wrapPage(
-            <AddTask onSubmit={this.onAddTask} />
+            <AddTask onSubmit={this.onAddTask.bind(this)} />
         ));
       default:
         return (this.wrapPage(
